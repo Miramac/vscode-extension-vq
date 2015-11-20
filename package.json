@@ -1,0 +1,25 @@
+{
+	"name": "vq",
+	"description": "vq Editor",
+	"version": "0.0.1",
+	"publisher": "Fabian Roloff",
+	"engines": {
+		"vscode": "^0.10.1"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:extension.vq.run"
+	],
+	"main": "./extension",
+	"contributes": {
+		"commands": [{
+			"command": "extension.vq.run",
+			"title": "vocQuery: Run script"
+		}]
+	},
+	"devDependencies": {
+		"vscode": "0.10.x"
+	}
+}
