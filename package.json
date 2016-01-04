@@ -1,5 +1,5 @@
 {
-	"name": "vq",
+	"name": "vq-vscode",
 	"description": "vq Editor",
 	"version": "0.0.1",
 	"publisher": "Fabian Roloff",
@@ -10,13 +10,20 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.vq.run"
+		"onCommand:vocatus.vq.run"
 	],
 	"main": "./extension",
 	"contributes": {
 		"commands": [{
-			"command": "extension.vq.run",
+			"command": "vocatus.vq.run",
 			"title": "vocQuery: Run script"
+		}],
+        "keybindings": [{
+            "command": "vocatus.vq.run",
+            "key": "F6"
+		},{
+            "command": "vocatus.vq.cancel",
+            "key": "F7"
 		}]
 	},
 	"devDependencies": {

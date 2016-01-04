@@ -1,41 +1,73 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+
 var vscode = require('vscode');
+var spawn = require('child_process').spawn;
+var fs = require('fs');
+var process = require('process');
+var path = require('path');
+var chalk = require('chalk') 
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
 function activate(context) {
+    var task;
+    var outputChannel = vscode.window.createOutputChannel('vocQuery');
+    var runningStatus = null;
+    
+    var run = vscode.commands.registerCommand('vocatus.vq.run', function () {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "vq" is now active!'); 
-
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
-	var disposable = vscode.commands.registerCommand('extension.vq.run', function () {
-		// The code you place here will be executed every time your command is executed
-
+        if(runningStatus) {
+           vscode.window.showErrorMessage('vocQuery is already running!');
+           return;
+        } 
+        runningStatus =  vscode.window.setStatusBarMessage('Running...')
 
         var editor = vscode.window.activeTextEditor;
         if (!editor) {
             return; // No open text editor
         }
-        
+        if(editor._document._languageId === 'Log') {
+            editor = vscode.window.visibleTextEditors[0];
+        }
         var selection = editor.selection;
         var text = editor.document.getText(selection);
         
         if(text === '') {
             text = editor.document.getText();
-        }
+        } 
         
-     
-        var x = eval(text)
-        // Display a message box to the user
-        vscode.window.showInformationMessage('done');
+        var tmpFile = path.join(process.env.temp,`_${Math.random()}.tmp`);
+        
+        outputChannel.show(2);
+        outputChannel.appendLine('Debug: Start process');
+                outputChannel.appendLine()
+                
+        text = `require('process').chdir('${path.dirname(editor.document.fileName).replace('\\','\\\\')}');\n${text}`;
+        fs.writeFileSync(tmpFile, text);
+        
+        task = spawn('node', [tmpFile]);
+        
+        task.stdout.on('data', function(data) {
+            outputChannel.append(data.toString());
+        });
+        task.stderr.on('data', function(data) {
+            outputChannel.appendLine('Error: ');
+            outputChannel.appendLine(data.toString());
+        }); 
+        task.on('close', function() {
+            fs.unlink(tmpFile);
+            outputChannel.appendLine('\nDebug: End process');
+            runningStatus.dispose();
+            runningStatus = null;
+        });
 
 	});
 	
-	context.subscriptions.push(disposable);
+    
+    var cancel = vscode.commands.registerCommand('vocatus.vq.cancel', function () {
+        if(runningStatus) {
+            vscode.window.showWarningMessage('Process canceled!');
+            task.kill();
+        }
+    });
+    
+	context.subscriptions.push(run, cancel);
 }
 exports.activate = activate;
